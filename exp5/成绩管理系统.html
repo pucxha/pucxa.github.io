@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no">
+    <title>092620222-蒲朝雄</title>
+    <!-- 直接引入vant的样式文件-->
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/1.css">
+    <!-- 直接引入vue框架-->
+    <script src="js/vue3.js"></script>
+    <!-- 先引用vue再引用vant-->
+    <script src="js/vant.min.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <div v-show="currentIndex==0">
+            <!--  主页面：成绩管理系统 -->
+            <van-image src="img/图片1.png" @click="this.popshow=true" width="433" height="625"></van-image>
+        </div>
+
+        <!-- 登录注册弹出层 -->
+        <van-popup v-model:show="popshow" position="top" :style="{height:'50%'}" closeable>
+            <h4 class="popTitle">成绩管理系统</h4>
+            <van-row justify="space-round" style="text-align:center;margin-top: 20px;">
+                <van-col span="12" class="item" @click="changeIN0">登录</van-col>
+                <van-col span="12" class="item" @click="changeIN1">注册</van-col>
+            </van-row>
+            <van-row justify="space-around" style="margin-top:40px;">
+                <van-col span="20" v-if="rolIndex==0">
+                    <van-cell-group>
+                        <van-field type="text" placeholder="请输入11位手机号码" left-icon="phone-o" class="rec"
+                            v-model="username">
+                        </van-field>
+                        <van-field type="password" placeholder="请输入密码" left-icon="bag-o" class="rec" v-model="password"
+                            style="margin-top:5px">
+                        </van-field>
+                        <van-button square type="success" size="large" style="margin-top:20px" @click="login">登录
+                        </van-button>
+                    </van-cell-group>
+                </van-col>
+                <van-col span="20" v-if="rolIndex==1">
+                    <van-cell-group>
+                        <van-field type="text" placeholder="请输入11位手机号码" left-icon="phone-o" class="rec"
+                            v-model="username">
+                        </van-field>
+                        <van-field type="password" placeholder="请输入密码" left-icon="bag-o" class="rec" v-model="password"
+                            style="margin-top:5px">
+                        </van-field>
+                        <van-button square type="primary" size="large" style="margin-top:20px" @click="register">注册
+                        </van-button>
+                    </van-cell-group>
+                </van-col>
+            </van-row>
+        </van-popup>
+
+        <!-- 成绩列表页 -->
+        <div v-show="currentIndex==1">
+            <van-nav-bar title="成绩列表页" left-text="返回" right-text="后台管理" left-arrow @click-left="this.currentIndex=0"
+                @click-right="this.currentIndex=2" class="navbar"></van-nav-bar>
+            <div class="newdiv">
+                <van-search v-model="value" shape="round" background="#4fc08d" placeholder="请输入学生学号(无输入默认查询全部）"
+                    @search="onSearch"></van-search>
+            </div>
+            <div>
+                <van-row justify="space-around"
+                    style="font-size:medium;background: rgb(0, 145, 255);color:white;margin-bottom: 20px;">
+                    <van-col span="5">学号</van-col>
+                    <van-col span="3">姓名</van-col>
+                    <van-col span="4" @click="this.sortByStruct">数据结构</van-col>
+                    <van-col span="4" @click="this.sortByDisperse">离散数学</van-col>
+                    <van-col span="4" @click="this.sortBySystem">操作系统</van-col>
+                    <van-col span="2" @click="this.sortBySummarize">总分</van-col>
+                </van-row>
+                <div v-show="this.searchData.length<=0">
+                    <van-row v-for="(item,index) in student" justify="space-around" class="content">
+                        <van-col span="5">{{item.number}}</van-col>
+                        <van-col span="2">{{item.name}}</van-col>
+                        <van-col offset="2" span="4">{{item.struct}}</van-col>
+                        <van-col span="4">{{item.disperse}}</van-col>
+                        <van-col span="4">{{item.system}}</van-col>
+                        <van-col span="2">{{item.summarize}}</van-col>
+                        <van-divider></van-divider>
+                    </van-row>
+                </div>
+
+                <div v-show="this.searchData.length>0">
+                    <van-row v-for="(item,index) in searchData" justify="space-around" class="content">
+                        <van-col span="5">{{item.number}}</van-col>
+                        <van-col span="2">{{item.name}}</van-col>
+                        <van-col offset="2" span="4">{{item.struct}}</van-col>
+                        <van-col span="4">{{item.disperse}}</van-col>
+                        <van-col span="4">{{item.system}}</van-col>
+                        <van-col span="2">{{item.summarize}}</van-col>
+                        <van-divider></van-divider>
+                    </van-row>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- 后台管理页面 -->
+        <div v-show="currentIndex==2">
+            <van-nav-bar title="成绩管理" left-text="返回" @click-left="this.currentIndex=0"></van-nav-bar>
+            <van-grid column-num="3">
+                <van-grid-item>
+                    <van-button type="primary" text="录入成绩" @click="changePanel0"
+                        :plain="managePanelIndex==0 ? false : true"></van-button>
+                </van-grid-item>
+                <van-grid-item>
+                    <van-button type="primary" text="修改成绩" @click="changePanel1"
+                        :plain="managePanelIndex==1 ? false : true"></van-button>
+                </van-grid-item>
+                <van-grid-item>
+                    <van-button type="primary" text="删除学生" @click="changePanel2"
+                        :plain="managePanelIndex==2 ? false : true"></van-button>
+                </van-grid-item>
+            </van-grid>
+            <!-- 功能模块 -->
+            <template v-if="managePanelIndex==0">
+                <van-cell-group title="录入成绩">
+                    <van-field type="text" v-model="newNumber" placeholder="请输入学生学号"></van-field>
+                    <van-field type="text" v-model="newName" placeholder="请输入学生姓名"></van-field>
+                    <van-field type="text" v-model="newStruct" placeholder="请输入学生数据结构成绩" @update:model-value="sum">
+                    </van-field>
+                    <van-field type="text" v-model="newDisperse" placeholder="请输入学生离散数学成绩" @update:model-value="sum">
+                    </van-field>
+                    <van-field type="text" v-model="newSystem" placeholder="请输入学生操作系统成绩" @update:model-value="sum">
+                    </van-field>
+                    <van-field type="text" v-model="newSummarize" placeholder="学生总分" readonly></van-field>
+                    <van-button type="primary" @click="add" text="添加" size="large"></van-button>
+                </van-cell-group>
+            </template>
+
+            <template v-if="managePanelIndex==1">
+                <van-cell-group title="修改成绩（请先输入学生学号进行查询，然后修改）">
+                    <van-field type="number" v-model="updateStudentNumber" placeholder="请输入学生学号">
+                        <template #button>
+                            <van-button type="primary" text="查询" @click="search" size="small"></van-button>
+                        </template>
+                    </van-field>
+                    <van-divider>查询结果</van-divider>
+                    <van-field type="text" v-model="newNumber" placeholder="学生学号" readonly></van-field>
+                    <van-field type="text" v-model="newName" placeholder="学生姓名" readonly></van-field>
+                    <van-field type="text" v-model="newStruct" placeholder="学生数据结构成绩" @update:model-value="sum">
+                    </van-field>
+                    <van-field type="text" v-model="newDisperse" placeholder="学生离散数学成绩" @update:model-value="sum">
+                    </van-field>
+                    <van-field type="text" v-model="newSystem" placeholder="学生操作系统成绩" @update:model-value="sum">
+                    </van-field>
+                    <van-field type="text" v-model="newSummarize" placeholder="学生总分" readonly></van-field>
+                    <van-button type="primary" @click="update" text="更新" size="large"></van-button>
+                </van-cell-group>
+            </template>
+
+            <template v-if="managePanelIndex==2">
+                <van-cell-group title="删除成绩（请先输入学生学号进行查询，然后删除）">
+                    <van-field type="number" v-model="updateStudentNumber" placeholder="请输入学生学号">
+                        <template #button>
+                            <van-button type="primary" text="查询" @click="search" size="small"></van-button>
+                        </template>
+                    </van-field>
+                    <van-divider>查询结果</van-divider>
+                    <van-field type="text" v-model="newNumber" placeholder="学生学号" readonly></van-field>
+                    <van-field type="text" v-model="newName" placeholder="学生姓名" readonly></van-field>
+                    <van-field type="text" v-model="newStruct" placeholder="学生数据结构成绩" readonly></van-field>
+                    <van-field type="text" v-model="newDisperse" placeholder="学生离散数学成绩" readonly></van-field>
+                    <van-field type="text" v-model="newSystem" placeholder="生操作系统成绩" readonly></van-field>
+                    <van-field type="text" v-model="newSummarize" placeholder="学生总分" readonly></van-field>
+                    <van-button type="primary" @click="del" text="删除" size="large" readonly></van-button>
+                </van-cell-group>
+            </template>
+
+
+
+        </div>
+
+        <van-tabbar v-model="currentIndex" v-show="currentIndex!=0">
+            <van-tabbar-item icon="home-o">系统主页</van-tabbar-item>
+            <van-tabbar-item icon="orders-o">成绩列表</van-tabbar-item>
+            <van-tabbar-item icon="setting-o">后台管理</van-tabbar-item>
+        </van-tabbar>
+
+    </div>
+</body>
+<script>
+    const app = Vue.createApp({
+        data() {
+            return {
+                username: "",
+                password: "",
+                user: [
+                    {
+                        username: "13962673579",
+                        password: "123456"
+                    }
+                ],
+
+                rolIndex: 0,
+                popshow: false,
+                newNumber: "",
+                newName: "",
+                newStruct: "",
+                newDisperse: "",
+                newSystem: "",
+                newSummarize: "",
+                //查询number
+                updateStudentNumber: "",
+                //查询后的索引
+                findIndex: -1,
+                //表示系统的不同界面
+                value: "",
+                //定义一个查询结果的存放数组 
+                searchData: [],
+                currentIndex: 0,
+                managePanelIndex: 0,
+                student: [
+                    {
+                        number: "092620222",
+                        name: "张三",
+                        struct: 82,
+                        disperse: 96,
+                        system: 88,
+                        summarize: 266
+                    },
+                    {
+                        number: "092620223",
+                        name: "李四",
+                        struct: 75,
+                        disperse: 73,
+                        system: 78,
+                        summarize: 226
+                    },
+                    {
+                        number: "092620224",
+                        name: "王五",
+                        struct: 36,
+                        disperse: 75,
+                        system: 62,
+                        summarize: 173
+                    },
+                    {
+                        number: "092620225",
+                        name: "赵六",
+                        struct: 65,
+                        disperse: 70,
+                        system: 66,
+                        summarize: 201
+                    },
+                ]
+
+            }
+        },
+        methods: {
+            login() {
+                this.findIndex = this.user.findIndex((item) => {
+                    return item.username === this.username && item.password === this.password
+                })
+                if (this.findIndex == -1) {
+                    vant.showFailToast("用户名或密码错误")
+                    this.username = ""
+                    this.password = ""
+                } else {
+                    vant.showSuccessToast("登录成功")
+                    this.popshow = false
+                    this.currentIndex = 1
+                }
+            },
+            changeIN0() {
+                this.rolIndex = 0
+                this.username = ""
+                this.password = ""
+            },
+            changeIN1() {
+                this.rolIndex = 1
+                this.username = ""
+                this.password = ""
+            },
+            register() {
+                this.findIndex = this.user.findIndex((item) => {
+                    return item.username === this.username
+                })
+                if (this.findIndex != -1) {
+                    vant.showFailToast("该用户名已存在")
+                    this.username = ""
+                    this.password = ""
+                } else {
+                    this.user.push({
+                        username: this.username,
+                        password: this.password
+                    })
+                    vant.showSuccessToast("注册成功，已自行登录")
+                    this.currentIndex = 1
+                    this.rolIndex = 0
+                    this.popshow = false
+                }
+
+            },
+            onSearch() {
+                if (this.value == "") {
+                    this.searchData.pop()
+                    vant.showSuccessToast("查询成功")
+                }
+                else {
+                    this.findIndex = this.student.findIndex((item) => {
+                        return item.number === this.value
+                    })
+                    this.searchData.push(this.student[this.findIndex])
+                    this.value = ""
+                    vant.showSuccessToast("查询成功")
+                    console.log(this.searchData)
+                }
+            },
+            changePanel0() {
+                this.managePanelIndex = 0
+                this.reset()
+            },
+            changePanel1() {
+                this.managePanelIndex = 1
+                this.updateStudentNumber = ""
+                this.reset()
+            },
+            changePanel2() {
+                this.managePanelIndex = 2
+                this.updateStudentNumber = ""
+                this.reset()
+            },
+            reset() {
+                this.newNumber = ""
+                this.newName = ""
+                this.newDisperse = ""
+                this.newStruct = ""
+                this.newSummarize = ""
+                this.newSystem = ""
+            },
+            update() {
+                this.student[this.findIndex].disperse = this.newDisperse
+                this.student[this.findIndex].struct = this.newStruct
+                this.student[this.findIndex].system = this.newSystem
+                this.student[this.findIndex].summarize = this.newSummarize
+                this.updateStudentNumber = ""
+                this.reset()
+
+                this.currentIndex = 1
+                vant.showSuccessToast("更新成功")
+                this.sortByNumber()
+            },
+            del() {
+                this.findIndex = this.student.findIndex((item) => {
+                    return item.number === this.updateStudentNumber
+                })
+                vant.showFailToast(this.student[this.findIndex].number + "被删除")
+                this.student.splice(this.findIndex, 1)
+                this.updateStudentNumber = ""
+                this.reset()
+                this.currentIndex = 1
+                this.sortByNumber()
+            },
+            sum() {
+                this.newSummarize = parseInt(this.newStruct) + parseInt(this.newDisperse) + parseInt(this.newSystem)
+            },
+            add() {
+                this.findIndex = this.student.findIndex((item) => {
+                    return item.number === this.newNumber
+                })
+                if (this.findIndex >= 0) {
+                    vant.showFailToast("该学生已存在系统中")
+                    this.reset()
+                }
+                else if (this.newNumber == "" || this.newName == "" || this.newDisperse == ""
+                    || this.newStruct == "" || this.newSystem == "" || this.newSummarize == "")
+                    vant.showFailToast("请将学生信息输入完整")
+                else {
+                    this.student.push({
+                        number: this.newNumber,
+                        name: this.newName,
+                        disperse: this.newDisperse,
+                        struct: this.newStruct,
+                        system: this.newSystem,
+                        summarize: this.newSummarize
+                    })
+                    vant.showSuccessToast("添加成功")
+                    this.sortByNumber()
+                    this.currentIndex = 1
+                    this.reset()
+                }
+
+            },
+            sortByNumber() {
+                this.student.sort(function (a, b) {
+                    return (a.number - b.number)
+                })
+            },
+            sortBySummarize() {
+                this.student.sort(function (a, b) {
+                    return (b.summarize - a.summarize)
+                })
+            },
+            sortByStruct() {
+                this.student.sort(function (a, b) {
+                    return (b.struct - a.struct)
+                })
+            },
+            sortByDisperse() {
+                this.student.sort(function (a, b) {
+                    return (b.disperse - a.disperse)
+                })
+            },
+            sortBySystem() {
+                this.student.sort(function (a, b) {
+                    return (b.system - a.system)
+                })
+            },
+            search() {
+                this.findIndex = this.student.findIndex((item) => {
+                    return item.number === this.updateStudentNumber
+                })
+                if (this.updateStudentNumber == "")
+                    vant.showFailToast("请输入查询的学生学号")
+                else if (this.findIndex == -1) {
+                    vant.showFailToast("当前系统中暂无该学生信息")
+                    this.updateStudentNumber = ""
+                }
+                else {
+
+                    this.newNumber = this.student[this.findIndex].number
+                    this.newName = this.student[this.findIndex].name
+                    this.newStruct = this.student[this.findIndex].struct
+                    this.newDisperse = this.student[this.findIndex].disperse
+                    this.newSystem = this.student[this.findIndex].system
+                    this.newSummarize = this.student[this.findIndex].summarize
+                    vant.showSuccessToast("查询成功")
+                }
+            }
+        },
+
+        mounted() {
+            vant.showToast({
+                message: "点击图片登录系统",
+                icon: "guide-o"
+            }),
+                this.sortByNumber()
+        },
+    })
+    app.use(vant)
+    const vm = app.mount('#app')
+</script>
+
+</html>
